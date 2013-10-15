@@ -1,0 +1,97 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <script src="//code.jquery.com/jquery.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+    <script src="./mustache.js"></script>
+
+    <title>Da Chronic</title> 
+
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <style>
+        body             { font: 12px/1em monospace; margin: 0; padding: 0; }
+
+        .publication     { margin: 0 15px 0 0; padding-left: 10px; float: left; width: 200px;
+                           border-left: 1px solid #aaa; }
+        .opinion .author { font-weight: bold; }
+        .opinion .date   { color: #f66; font-weight: bold; }
+    </style>
+</head>
+
+
+<body>
+    <div id="publications" class="row">
+    </div>
+</body>
+
+<script id="TPL-publication" type="text/mustache">
+  <div class="publication">
+    <h2>{{name}}</h2>
+    <div>
+        {{#opinions}}
+        <div class="opinion">
+            <a class="title" href="{{uri}}">{{title}}</a> <br />
+            <span class="author" >{{author}}</span>
+            <span class="date"   >{{day}}.{{month}}</span>
+            <br />
+            <br />
+        </div>
+        {{/opinions}}
+    </div>
+  </div>
+</script>
+
+<script>
+var $1 = function(selector) {
+  var res = $(selector);
+  console.assert(res.length == 1);
+  return res;
+};
+
+var handleGenericError = function() {
+  console.log("ERROR");
+  console.log(arguments);
+};
+
+var _tplCache = {};
+var findTemplate = function(templateName) {
+  if (!_tplCache[templateName]) {
+    var tplEl = $1('#TPL-'+templateName);
+    var tpl = Mustache.compile(tplEl.html());
+    _tplCache[templateName] = tpl;
+  }
+
+  return function(context) {
+    var tpl = _tplCache[templateName];
+    return tpl(context);
+  };
+};
+
+$(document).ready(function(){
+
+var renderPub = findTemplate("publication");
+
+var pubsEl = $1("#publications");
+
+$.ajax("./chronics.json")
+    .error(handleGenericError)
+    .success(function(publications) {
+        _(publications).each(function(pub){
+            pubsEl.append(renderPub(pub));
+        });
+
+        $(".publication").each(function(i, pubEl){
+            $(pubEl).css("height", $(window).height() + "px");
+        });
+    });
+});
+</script>
+
+</html>
